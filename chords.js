@@ -154,9 +154,9 @@ var ChordJS = (function () {
             //FontFamily family = new FontFamily(FONT_NAME);
             //perc = family.GetCellAscent(FontStyle.Regular) / family.GetLineSpacing(FontStyle.Regular);
             var perc = 0.8;
-            _fretFontSize = _fretWidth / perc;
+            _fretFontSize = _fretWidth * 1.4;
             _fingerFontSize = _fretWidth * 0.8;
-            _guitarStringFontSize = 'bold ' + (_fretWidth * 0.8);
+            _guitarStringFontSize = _fretWidth * 1.4;
             _nameFontSize = _fretWidth * 2 / perc;
             _superScriptFontSize = 0.7 * _nameFontSize;
             if (_size == 1) {
@@ -165,12 +165,17 @@ var ChordJS = (function () {
                 _fretFontSize += 2;
                 _superScriptFontSize += 2;
             }
+            // Hide name if set to null
+            if(name===null){
+                _nameFontSize = 0;
+                _superScriptFontSize = 0;
+            }
 
             _xstart = _fretWidth;
             _ystart = Math.round(0.2 * _superScriptFontSize + _nameFontSize + _nutHeight + 1.7 * _markerWidth);
 
             _imageWidth = (_boxWidth + 5 * _fretWidth);
-            _imageHeight = (_boxHeight + _ystart + _fretWidth + _fretWidth);
+            _imageHeight = (_boxHeight + _ystart + _fretWidth + _guitarStringFontSize / 2);
 
             _signWidth = (_fretWidth * 0.75);
             _signRadius = _signWidth / 2;
@@ -391,8 +396,8 @@ var ChordJS = (function () {
 
         var DrawFingers = function () {
             var xpos = _xstart + (0.5 * _lineWidth);
-            var ypos = _ystart + _boxHeight;
-            var font = Font(FONT_NAME, _fingerFontSize);
+            var ypos = _imageHeight - _guitarStringFontSize;
+            var font = Font(FONT_NAME, _guitarStringFontSize);
             for (var f = 0; f < _fingers.length; f++) {
                 var finger = _fingers[f];
                 if (finger != NO_FINGER) {
@@ -406,7 +411,7 @@ var ChordJS = (function () {
 
         var DrawStringNames = function () {
             var xpos = _xstart + (0.5 * _lineWidth);
-            var ypos = _ystart + _boxHeight;
+            var ypos = _imageHeight - _guitarStringFontSize;
             var font = Font(FONT_NAME, _guitarStringFontSize);
             for (var s = 0; s < 6; s++) {
                 var guitarString = _stringNames[s];
@@ -444,7 +449,7 @@ var ChordJS = (function () {
             if (_baseFret > 1) {
                 var fretFont = Font(FONT_NAME, _fretFontSize);
                 var offset = (_fretFontSize - _fretWidth) / 2;
-                _graphics.DrawString(_baseFret + "fr", fretFont, _foregroundBrush, _xstart + _boxWidth + 0.4 * _fretWidth, _ystart - offset);
+                _graphics.DrawString(_baseFret + "fr", fretFont, _foregroundBrush, _xstart + _boxWidth + 0.6 * _fretWidth, _ystart - offset);
             }
         };
 
@@ -517,8 +522,16 @@ var ChordJS = (function () {
 
     //requires jQuery
     //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
-    var ReplaceChordElements = function (baseEl) {
+    var ReplaceChordElements = function (baseEl, options) {
         baseEl = baseEl || 'body';
+
+        defaults = {
+            size: 4,
+            layout: '1',
+            hideName: false
+        };
+        options = options || {};
+        options = Object.assign({}, defaults, options);
 
         var renderedChords = document.querySelector(baseEl).getElementsByClassName('rendered-chord')
         for (var i = 0, l = renderedChords.length; i < l; ++i) {
@@ -528,12 +541,24 @@ var ChordJS = (function () {
         var chords = document.getElementsByTagName('chord');
         for (var i = 0; i < chords.length; ++i) {
             var elt = chords[i]
-            var name = elt.getAttribute('name');
+            var name = elt.getAttribute('name') || "";
+            if (options['hideName']) {
+                name = null;
+            }
+
             var positions = elt.getAttribute('positions');
             var fingers = elt.getAttribute('fingers');
-            var size = elt.getAttribute('size');
+
+            if (elt.getAttribute('size') === null) {
+                var size = options['size'];
+                elt.setAttribute('size', size);
+            } else {
+                var size = elt.getAttribute('size');
+            }
+
             if (elt.getAttribute('layout') === null) {
-                var layout = elt.setAttribute('layout', '1');
+                var layout = options['layout'];
+                elt.setAttribute('layout', layout);
             } else {
                 var layout = elt.getAttribute('layout');
             }
