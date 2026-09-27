@@ -467,10 +467,41 @@ var ChordJS = (function(){
 
     };  
     
+    var ValidateChord = function(chord) {
+        var isValidChord = false;
+        if (chord == null || typeof chord == 'undefined' || !chord.match(/[\dxX]{6}|((1|2)?[\dxX]-){5}(1|2)?[\dxX]/)) {
+            return isValidChord;
+        } else {
+            var parts;
+            if (chord.length > 6) {
+                parts = chord.split('-');
+            } else {
+                parts = chord.split('');
+            }
+            if (parts.length == 6) {
+                isValidChord = true;
+            }
+        }
+        return isValidChord;
+    };
+
     function GenerateChordHtml(name, positions, fingering, size, layout, stringNames) {
-        if (positions.length != 6 || fingering.length != 6) {
-            console.error('ChordJS cannot generate a chord diagram from invalid chord input! (Too many positions or fingers.');
+        var isValidChord = ValidateChord(positions);
+        var renderEmptyChord = false;
+        if (!isValidChord) {
+            console.error('ChordJS cannot generate a chord diagram from invalid chord input! (Incorrect positions.');
             console.log('ChordJS will render an empty chord instead!');
+            renderEmptyChord = true;
+        }
+        if (fingering == null || typeof fingering == 'undefined') {
+            fingering = '------';  // Set default fingering if not provided
+        }
+        else if (fingering.length != 6) {
+            console.error('ChordJS cannot generate a chord diagram from invalid chord input! (Incorrect number of fingers.');
+            console.log('ChordJS will render an empty chord instead!');
+            renderEmptyChord = true;
+        }
+        if (renderEmptyChord) {
             positions = 'xxxxxx';
             fingering = '------';
         }
